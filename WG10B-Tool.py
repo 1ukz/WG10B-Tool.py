@@ -110,13 +110,6 @@ def create_session_key(master_key_str, rn_hex, nt_hex, crn_hex):
     return sk.hex().upper()
 
 def compute_plain_signature(command_bytes, SK, debug=False):
-    """
-    A partir del comando (bytes) y la SK (bytes), calcula:
-      - El header actualizado (donde L se incrementa en 3)
-      - La DATA en claro (original)
-      - La firma S2 (últimos 3 bytes) calculada usando el proceso de secure messaging plain.
-    Devuelve una tupla: (new_header, data, signature)
-    """
     header = command_bytes[:5]
     data = command_bytes[5:]
     if debug:
@@ -130,14 +123,15 @@ def compute_plain_signature(command_bytes, SK, debug=False):
     plaintext = new_header + data
     if debug:
         print("Plaintext para firma (header actualizado + data):", plaintext.hex().upper())
+    
     # Dividir en bloques de 8 bytes
     blocks = [plaintext[i:i+8] for i in range(0, len(plaintext), 8)]
     if debug:
         for i, block in enumerate(blocks):
             print(f"Bloque {i+1}: {block.hex().upper()}")
-    iv = b'\x00' * 8
-    des_cipher = DES.new(SK[:8], DES.MODE_CBC, iv=iv)
-    prev_cb = iv
+
+    prev_cb = b'\x00' * 8
+    des_cipher = DES.new(SK[:8], DES.MODE_ECB)  # <-- ECB aquí ya que el cbc se hace manualmente con el block_xor
     for i, block in enumerate(blocks[:-1]):
         if len(block) < 8:
             block = block.ljust(8, b'\x00')
@@ -147,6 +141,7 @@ def compute_plain_signature(command_bytes, SK, debug=False):
             print(f"Bloque {i+1} XOR para firma:", block_xor.hex().upper())
             print(f"CB{i+1}:", cb.hex().upper())
         prev_cb = cb
+
     last_block = blocks[-1]
     if len(last_block) < 8:
         last_block = last_block.ljust(8, b'\x00')
@@ -155,7 +150,8 @@ def compute_plain_signature(command_bytes, SK, debug=False):
     last_block_xor = bytes(a ^ b for a, b in zip(last_block, prev_cb))
     if debug:
         print("Último bloque XOR para firma:", last_block_xor.hex().upper())
-    des3_cipher = DES3.new(SK, DES3.MODE_CBC, iv=iv)
+
+    des3_cipher = DES3.new(SK, DES3.MODE_CBC, iv=b'\x00' * 8)
     S2 = des3_cipher.encrypt(last_block_xor)
     if debug:
         print("S2 completo para firma:", S2.hex().upper())
@@ -241,6 +237,7 @@ def main():
         crn = input("Introduce CRN en hexadecimal (ej. 6BF9ABA5D26CDC95): ").strip()
         try:
             sk = create_session_key(master_key, rn, nt, crn)
+            print("=== FINAL OUTPUT (SK) ===")
             print("Session Key (SK):", sk)
         except ValueError as e:
             print("Error:", e)
