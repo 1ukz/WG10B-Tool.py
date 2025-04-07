@@ -25,7 +25,7 @@ El script se ejecuta desde la línea de comandos y acepta los siguientes argumen
 - -d o --debug (opcional):
   Activa el modo debug y muestra los mensajes intermedios con detalles del procesamiento.
   ```bash
-  python script.py [-h] -o {1,2,3} [-d]
+  python WG10B-Tool.py [-h] -o {1,2,3} [-d]
 ## Notas Adicionales
 Formato de Entradas:
 - Las claves y datos en hexadecimal pueden ingresarse con o sin separadores (se eliminan internamente).
