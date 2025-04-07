@@ -16,13 +16,13 @@ Este script Python implementa protocolos de seguridad para tarjetas inteligentes
 ## Uso
 El script se ejecuta desde la línea de comandos y acepta los siguientes argumentos:
 
-- o o --option:
+- -o o --option:
   Define la funcionalidad a ejecutar:
   1: Crear Session Key
   2: Secure Messaging (plain)
   3: Ciphered Secure Messaging
 
-- d o --debug (opcional):
+- -d o --debug (opcional):
   Activa el modo debug y muestra los mensajes intermedios con detalles del procesamiento.
   ```bash
   python script.py [-h] -o {1,2,3} [-d]
